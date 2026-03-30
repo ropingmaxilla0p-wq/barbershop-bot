@@ -668,7 +668,7 @@
         /* ── Data ── */
         async function loadConfig() {
             try {
-                const res = await fetch('/api/config', {headers: {'ngrok-skip-browser-warning': 'true', 'User-Agent': 'TelegramBot'}});
+                const res = await fetch('/api/config', {headers: {'User-Agent': 'TelegramBot'}});
                 state.config = await res.json();
                 updateUI();
             } catch (e) {
@@ -723,7 +723,7 @@
             // Load booked dates for this master to disable them in calendar
             let disabledDates = [];
             try {
-                const res = await fetch(`/api/booked-dates?master_id=${state.booking.master.id}`, {headers: {'ngrok-skip-browser-warning': 'true', 'User-Agent': 'TelegramBot'}});
+                const res = await fetch(`/api/booked-dates?master_id=${state.booking.master.id}`, {headers: {'User-Agent': 'TelegramBot'}});
                 const data = await res.json();
                 disabledDates = data.fully_booked_dates || [];
             } catch(e) {}
@@ -748,7 +748,7 @@
             
             try {
                 const duration = state.booking.service?.duration_minutes || 30;
-                const res = await fetch(`/api/available-slots?master_id=${state.booking.master.id}&date=${date}&duration=${duration}`, {headers: {'ngrok-skip-browser-warning': 'true', 'User-Agent': 'TelegramBot'}});
+                const res = await fetch(`/api/available-slots?master_id=${state.booking.master.id}&date=${date}&duration=${duration}`, {headers: {'User-Agent': 'TelegramBot'}});
                 const data = await res.json();
                 grid.innerHTML = '';
                 const hint = document.getElementById('time-hint');
@@ -934,7 +934,7 @@
 
             try {
                 const res = await fetch(`/api/bookings/${userId}`, {
-                    headers: {'ngrok-skip-browser-warning': 'true', 'User-Agent': 'TelegramBot'}
+                    headers: {'User-Agent': 'TelegramBot'}
                 });
                 const data = await res.json();
 
@@ -1027,7 +1027,7 @@
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'ngrok-skip-browser-warning': 'true',
+                        ,
                         'User-Agent': 'TelegramBot'
                     },
                     body: JSON.stringify({ user_id: String(userId) })
@@ -1109,7 +1109,7 @@
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'ngrok-skip-browser-warning': 'true',
+                        ,
                         'User-Agent': 'TelegramBot'
                     },
                     body: JSON.stringify(payload)
