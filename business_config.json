@@ -1,0 +1,82 @@
+{
+  "barbershop_name": "The Gentleman's Den",
+  "business_type": "barbershop",
+  "currency": "UAH",
+  "services": [
+    {
+      "id": 1,
+      "name": "Стрижка",
+      "price": 350,
+      "duration_minutes": 45
+    },
+    {
+      "id": 2,
+      "name": "Борода",
+      "price": 250,
+      "duration_minutes": 30
+    },
+    {
+      "id": 3,
+      "name": "Комплекс",
+      "price": 550,
+      "duration_minutes": 75
+    },
+    {
+      "id": 4,
+      "name": "Фарбування",
+      "price": 800,
+      "duration_minutes": 90
+    }
+  ],
+  "masters": [
+    {
+      "id": 1,
+      "name": "Олександр",
+      "specialization": "Топ-барбер",
+      "experience_years": 5,
+      "rating": 4.9,
+      "telegram_id": 7242822593
+    },
+    {
+      "id": 2,
+      "name": "Дмитро",
+      "specialization": "Барбер",
+      "experience_years": 3,
+      "rating": 4.8,
+      "telegram_id": 555808296
+    },
+    {
+      "id": 3,
+      "name": "Ігор",
+      "specialization": "Молодший барбер",
+      "experience_years": 1,
+      "rating": 4.7,
+      "telegram_id": null
+    }
+  ],
+  "working_hours": {
+    "start": "09:00",
+    "end": "20:00"
+  },
+  "slot_duration_minutes": 30,
+  "languages": [
+    "ua",
+    "ru"
+  ],
+  "blocked_dates": [],
+  "tariffs": [
+    {
+      "id": 1,
+      "name": "Стрижка + Борода",
+      "services": [
+        1,
+        2
+      ],
+      "price": 550,
+      "discount_percent": 8.3,
+      "duration_minutes": 75,
+      "active": true,
+      "created_at": "2026-03-28"
+    }
+  ]
+}

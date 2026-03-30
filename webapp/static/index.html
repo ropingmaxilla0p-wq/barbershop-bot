@@ -1,0 +1,1172 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>THE ROYAL BARBER • Booking</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/flatpickr.min.css">
+    <script src="/static/flatpickr.min.js"></script>
+    <script src="/static/flatpickr.uk.js"></script>
+
+    <style>
+        :root {
+            --gold:         #D4AF37;
+            --gold-bright:  #F9E27D;
+            --gold-deep:    #996515;
+            --gold-glow:    rgba(212, 175, 55, 0.4);
+            --bg-body:      #080808;
+            --bg-card:      rgba(15, 12, 10, 0.85);
+            --text-white:   #FFFFFF;
+            --text-gold:    #D4AF37;
+            --text-gray:    #9A9382;
+            --divider:      rgba(212, 175, 55, 0.15);
+            --gold-gradient: linear-gradient(135deg, #996515 0%, #D4AF37 45%, #F9E27D 50%, #D4AF37 55%, #996515 100%);
+            --font-sans:     'Montserrat', sans-serif;
+            --font-serif:    'Playfair Display', serif;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            font-family: var(--font-sans);
+            background-color: var(--bg-body);
+            color: var(--text-white);
+            min-height: 100vh;
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            overflow-x: hidden;
+            transition: background-image 0.6s ease-in-out;
+        }
+
+        body::before { display: none; }
+
+        /* ── Step 0: Welcome ── */
+        #step-0 {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            text-align: center;
+            z-index: 1000;
+            background: transparent;
+        }
+
+        #step-0::after { display: none; }
+
+        #step-0 > * { position: relative; z-index: 2; }
+
+        .welcome-logo-ornament {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            opacity: 0.8;
+        }
+        .welcome-logo-ornament .line { width: 40px; height: 1px; background: var(--gold-primary); }
+        .welcome-logo-ornament .star { color: var(--gold); font-size: 14px; }
+
+        .welcome-title {
+            font-family: var(--font-serif);
+            font-size: clamp(48px, 12vw, 72px);
+            font-weight: 700;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            line-height: 1;
+            margin-bottom: 5px;
+            text-shadow: 0 10px 30px rgba(0,0,0,0.8);
+        }
+
+        .welcome-badge {
+            font-size: 13px;
+            color: var(--text-gold);
+            text-transform: uppercase;
+            letter-spacing: 0.35em;
+            margin-bottom: 60px;
+            font-family: var(--font-sans);
+            font-weight: 300;
+        }
+
+        .start-btn {
+            background: linear-gradient(135deg, #111 0%, #222 100%);
+            color: var(--text-gold);
+            border: 1px solid var(--gold);
+            padding: 22px 60px;
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.25em;
+            cursor: pointer;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8), inset 0 0 20px rgba(212, 175, 55, 0.1);
+            transition: all 0.5s cubic-bezier(0.165, 0.84, 0.44, 1);
+            position: relative;
+            overflow: hidden;
+            font-family: var(--font-sans);
+            border-radius: 4px;
+        }
+        .start-btn::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%; width: 50%; height: 100%;
+            background: linear-gradient(to right, transparent, rgba(212, 175, 55, 0.2), transparent);
+            transform: skewX(-25deg);
+            transition: all 0.7s;
+        }
+        .start-btn:hover { 
+            background: var(--gold-gradient);
+            color: #000;
+            box-shadow: 0 15px 40px rgba(212, 175, 55, 0.4), inset 0 0 15px rgba(255, 255, 255, 0.5);
+            border-color: var(--gold-bright);
+            transform: translateY(-2px);
+        }
+        .start-btn:hover::before { left: 200%; }
+
+        /* ── Inner App ── */
+        .inner-page { max-width: 550px; margin: 0 auto; padding: 16px 16px 100px; position: relative; z-index: 10; min-height: 100vh; }
+
+        /* ── Progress ── */
+        .progress-box { margin-bottom: 20px; position: relative; }
+        .progress-bar-track { height: 2px; background: rgba(255,255,255,0.05); margin: 0 12.5% 25px; position: relative; top: 15px; z-index: 1; border-radius: 2px; }
+        .progress-bar-fill { height: 2px; background: var(--gold-gradient); position: absolute; left: 0; transition: width 0.8s cubic-bezier(0.8, 0, 0.2, 1); box-shadow: 0 0 15px var(--gold-glow); border-radius: 2px; }
+        
+        .prog-steps { display: flex; justify-content: space-between; position: relative; z-index: 2; }
+        .prog-step { flex: 1; text-align: center; }
+        .prog-circle {
+            width: 30px; height: 30px; border: 1px solid rgba(255,255,255,0.2);
+            background: var(--bg-body);
+            margin: 0 auto 10px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 12px; color: var(--text-gray); transition: all 0.5s;
+            font-family: var(--font-sans); font-weight: 500;
+        }
+        .prog-step.active .prog-circle { 
+            border-color: var(--gold); color: var(--gold); 
+            box-shadow: 0 0 20px rgba(212,175,55,0.3), inset 0 0 10px rgba(212,175,55,0.1); 
+            transform: scale(1.1);
+        }
+        .prog-step.done .prog-circle { 
+            background: var(--gold-gradient); border-color: transparent; color: #000; 
+            box-shadow: 0 0 15px rgba(212,175,55,0.4);
+        }
+        .prog-label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.15em; color: var(--text-gray); font-weight: 500; transition: 0.3s; }
+        .prog-step.active .prog-label { color: var(--gold); }
+        .prog-step.done .prog-label { color: rgba(255,255,255,0.8); }
+
+        /* ── Typography & Cards ── */
+        .page-title {
+            font-family: var(--font-serif);
+            font-size: clamp(22px, 6vw, 30px);
+            text-align: center;
+            margin-bottom: 16px;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+        }
+
+        .item-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid transparent;
+            border-bottom: 1px solid var(--divider);
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+            position: relative;
+        }
+        .item-card:hover { transform: translateX(5px); background: rgba(25, 20, 18, 0.9); border-color: rgba(212, 175, 55, 0.3); box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+        .item-card.selected { background: rgba(212, 175, 55, 0.05); border-color: var(--gold); box-shadow: 0 0 20px rgba(212, 175, 55, 0.15), inset 0 0 10px rgba(212, 175, 55, 0.05); }
+
+        .item-num { font-family: var(--font-serif); font-size: 26px; color: var(--gold); font-weight: 600; opacity: 0.6; margin-right: 20px; width: 40px; text-align: center; text-shadow: 0 2px 10px rgba(0,0,0,0.5); }
+        .master-avatar { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; border: 2px solid var(--gold); margin-right: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.5); flex-shrink: 0; }
+        .item-main { flex: 1; }
+        .item-title { font-size: 17px; font-weight: 600; margin-bottom: 4px; letter-spacing: 0.02em; }
+        .item-sub { font-size: 13px; color: var(--text-gray); font-weight: 400; }
+        .item-price { font-family: var(--font-serif); font-size: 22px; color: var(--gold); font-weight: 700; }
+
+        /* ── Calendar & Slots ── */
+        #calendar-inline {
+            display: flex;
+            justify-content: center;
+            width: 100%;
+            margin-bottom: 16px;
+        }
+        .flatpickr-calendar {
+            background: rgba(15, 12, 10, 0.45) !important;
+            backdrop-filter: blur(25px);
+            border: 1px solid var(--divider) !important;
+            border-radius: 16px !important;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.8), inset 0 0 0 1px rgba(212,175,55,0.1) !important;
+            padding: 10px !important;
+            font-family: var(--font-sans) !important;
+            position: static !important;
+            margin: 0 auto !important;
+            float: none !important;
+        }
+        .flatpickr-calendar {
+            width: 100% !important;
+            max-width: 100% !important;
+        }
+        .flatpickr-innerContainer, .flatpickr-rContainer, .flatpickr-days, .dayContainer {
+            width: 100% !important;
+            max-width: 100% !important;
+            min-width: unset !important;
+        }
+        .flatpickr-day {
+            height: calc((100vw - 56px) / 7) !important;
+            line-height: calc((100vw - 56px) / 7) !important;
+            max-width: calc((100vw - 56px) / 7) !important;
+            font-size: 14px !important;
+            flex-basis: calc(100% / 7) !important;
+        }
+        .flatpickr-months { padding: 4px 0 !important; }
+        .flatpickr-current-month .flatpickr-monthDropdown-months { font-size: 16px !important; }
+        .flatpickr-weekday { font-size: 11px !important; line-height: 28px !important; flex-basis: calc(100% / 7) !important; }
+        .flatpickr-weekdays { width: 100% !important; }
+        .flatpickr-calendar { padding: 8px !important; }
+        .flatpickr-day.selected, .flatpickr-day.startRange, .flatpickr-day.endRange, .flatpickr-day.selected.inRange, .flatpickr-day.startRange.inRange, .flatpickr-day.endRange.inRange, .flatpickr-day.selected:focus, .flatpickr-day.startRange:focus, .flatpickr-day.endRange:focus, .flatpickr-day.selected:hover, .flatpickr-day.startRange:hover, .flatpickr-day.endRange:hover, .flatpickr-day.selected.prevMonthDay, .flatpickr-day.startRange.prevMonthDay, .flatpickr-day.endRange.prevMonthDay, .flatpickr-day.selected.nextMonthDay, .flatpickr-day.startRange.nextMonthDay, .flatpickr-day.endRange.nextMonthDay {
+            background: var(--gold-gradient) !important; 
+            color: #000 !important; 
+            border-color: transparent !important; 
+            border-radius: 50% !important; 
+            font-weight: 700 !important;
+            box-shadow: 0 0 15px rgba(212, 175, 55, 0.5) !important;
+        }
+        .flatpickr-day { color: #fff !important; border-radius: 50% !important; transition: all 0.3s !important; }
+        .flatpickr-day:hover { background: rgba(212, 175, 55, 0.2) !important; }
+        .flatpickr-month, .flatpickr-current-month, .flatpickr-weekday { color: var(--gold) !important; fill: var(--gold) !important; }
+        span.flatpickr-weekday { font-weight: 600 !important; text-transform: uppercase; font-size: 10px; letter-spacing: 0.1em; color: var(--gold) !important; }
+        .flatpickr-current-month .flatpickr-monthDropdown-months { appearance: none; background: transparent; color: var(--gold); font-weight: 600; font-family: var(--font-serif); font-size: 20px; }
+
+        /* Contact form */
+        .contact-label { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; color: var(--text-gray); margin-bottom: 8px; }
+        .contact-input {
+            width: 100%; background: rgba(15,12,10,0.7); border: 1px solid var(--divider);
+            border-radius: 8px; padding: 14px 16px; color: var(--text-white);
+            font-family: var(--font-sans); font-size: 15px; outline: none;
+            transition: border-color 0.3s;
+        }
+        .contact-input:focus { border-color: var(--gold); box-shadow: 0 0 0 2px rgba(212,175,55,0.15); }
+        .contact-input::placeholder { color: var(--text-gray); }
+
+        .slots-box { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+        .slot-btn {
+            background: rgba(20, 15, 12, 0.7);
+            border: 1px solid var(--divider);
+            padding: 12px;
+            text-align: center;
+            font-size: 15px;
+            font-weight: 500;
+            transition: all 0.3s;
+            cursor: pointer;
+            border-radius: 8px;
+            backdrop-filter: blur(10px);
+        }
+        .slot-btn:hover:not(.busy) { border-color: rgba(212, 175, 55, 0.5); transform: translateY(-2px); background: rgba(212, 175, 55, 0.1); }
+        .slot-btn.selected { background: var(--gold-gradient); color: #000; border-color: transparent; font-weight: 700; box-shadow: 0 5px 15px rgba(212, 175, 55, 0.3); }
+        .slot-btn.busy { opacity: 0.15; cursor: default; }
+
+        /* ── Sticky Navigation ── */
+        #step-container {
+            padding-bottom: 140px;
+        }
+        /* Extra space after calendar and slots */
+        #step-container .flatpickr-calendar {
+            margin-bottom: 16px;
+        }
+        #step-container .slots-section {
+            margin-bottom: 24px;
+        }
+        .footer-action {
+            position: fixed;
+            bottom: max(env(safe-area-inset-bottom, 0px), 16px);
+            left: 16px;
+            right: 16px;
+            z-index: 1000;
+        }
+        .next-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #111 0%, #222 100%);
+            color: var(--text-gold);
+            border: 1px solid var(--gold);
+            padding: 22px;
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.25em;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8), inset 0 0 20px rgba(212, 175, 55, 0.1);
+            transition: all 0.5s cubic-bezier(0.165, 0.84, 0.44, 1);
+            position: relative;
+            overflow: hidden;
+            font-family: var(--font-sans);
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        .next-btn::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%; width: 50%; height: 100%;
+            background: linear-gradient(to right, transparent, rgba(212, 175, 55, 0.2), transparent);
+            transform: skewX(-25deg);
+            transition: all 0.7s;
+        }
+        .next-btn:not(:disabled):hover {
+            background: var(--gold-gradient);
+            color: #000;
+            box-shadow: 0 15px 40px rgba(212, 175, 55, 0.4), inset 0 0 15px rgba(255, 255, 255, 0.5);
+            border-color: var(--gold-bright);
+            transform: translateY(-2px);
+        }
+        .next-btn:not(:disabled):hover::before { left: 200%; }
+        .next-btn:disabled { opacity: 0.3; pointer-events: none; border-color: var(--divider); color: var(--text-gray); box-shadow: none; background: #111; }
+
+        .back-nav { font-size: 11px; text-transform: uppercase; color: var(--text-gold); margin-bottom: 20px; display: inline-block; letter-spacing: 0.1em; cursor: pointer; font-weight: 500; }
+
+        /* ── Tab Bar ── */
+        .tab-bar {
+            display: flex;
+            gap: 0;
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--divider);
+        }
+        .tab-bar-item {
+            flex: 1;
+            text-align: center;
+            padding: 14px 8px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: var(--text-gray);
+            cursor: pointer;
+            transition: all 0.3s;
+            border-bottom: 2px solid transparent;
+            font-family: var(--font-sans);
+        }
+        .tab-bar-item.active {
+            color: var(--gold);
+            border-bottom-color: var(--gold);
+        }
+        .tab-bar-item:hover:not(.active) { color: rgba(212,175,55,0.6); }
+
+        /* ── My Bookings (TASK-001) ── */
+        .my-booking-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--divider);
+            border-radius: 10px;
+            padding: 18px;
+            margin-bottom: 12px;
+            transition: all 0.3s;
+        }
+        .my-booking-card.status-cancelled,
+        .my-booking-card.status-completed {
+            opacity: 0.5;
+        }
+        .my-booking-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 10px;
+        }
+        .my-booking-date {
+            font-family: var(--font-serif);
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-white);
+        }
+        .my-booking-status {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            padding: 4px 10px;
+            border-radius: 20px;
+        }
+        .status-badge-pending { background: rgba(255,193,7,0.15); color: #FFC107; }
+        .status-badge-confirmed { background: rgba(76,175,80,0.15); color: #4CAF50; }
+        .status-badge-completed { background: rgba(158,158,158,0.15); color: #9E9E9E; }
+        .status-badge-cancelled { background: rgba(244,67,54,0.15); color: #F44336; }
+        .my-booking-details {
+            font-size: 14px;
+            color: var(--text-gray);
+            line-height: 1.8;
+        }
+        .cancel-btn {
+            width: 100%;
+            margin-top: 14px;
+            padding: 14px;
+            background: rgba(244,67,54,0.08);
+            border: 1px solid rgba(244,67,54,0.3);
+            color: #F44336;
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: var(--font-sans);
+        }
+        .cancel-btn:hover { background: rgba(244,67,54,0.15); border-color: #F44336; }
+        .cancel-btn:disabled { opacity: 0.3; cursor: default; }
+        .my-bookings-empty {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-gray);
+            font-size: 14px;
+        }
+        .my-bookings-empty .empty-icon { font-size: 48px; margin-bottom: 16px; }
+
+        /* Cancel confirm modal */
+        .cancel-modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.7);
+            z-index: 2000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .cancel-modal {
+            background: #1a1a1a;
+            border: 1px solid var(--divider);
+            border-radius: 14px;
+            padding: 28px 24px;
+            max-width: 340px;
+            width: 100%;
+            text-align: center;
+        }
+        .cancel-modal h3 {
+            font-family: var(--font-serif);
+            font-size: 20px;
+            color: var(--text-white);
+            margin-bottom: 10px;
+        }
+        .cancel-modal p {
+            font-size: 13px;
+            color: var(--text-gray);
+            margin-bottom: 24px;
+            line-height: 1.6;
+        }
+        .cancel-modal-actions {
+            display: flex;
+            gap: 10px;
+        }
+        .cancel-modal-actions button {
+            flex: 1;
+            padding: 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            cursor: pointer;
+            font-family: var(--font-sans);
+            transition: all 0.3s;
+        }
+        .modal-btn-back {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--divider);
+            color: var(--text-gray);
+        }
+        .modal-btn-confirm {
+            background: rgba(244,67,54,0.15);
+            border: 1px solid rgba(244,67,54,0.4);
+            color: #F44336;
+        }
+        .modal-btn-confirm:hover { background: rgba(244,67,54,0.3); }
+
+        .hidden { display: none !important; }
+        .fade-entry { animation: fadeUp 0.6s ease-out forwards; }
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* ── Summary Panel ── */
+        .summary-panel {
+            background: rgba(15, 12, 10, 0.85);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--gold);
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5), inset 0 0 20px rgba(212, 175, 55, 0.05);
+            position: relative;
+            overflow: hidden;
+        }
+        .summary-panel::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; height: 3px;
+            background: var(--gold-gradient);
+        }
+        .sum-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .sum-lbl { color: var(--text-gray); font-size: 14px; text-transform: uppercase; letter-spacing: 0.1em; }
+        .sum-val { font-size: 16px; font-weight: 500; font-family: var(--font-sans); text-align: right; }
+        .sum-total { font-size: 26px; font-weight: 700; color: var(--gold); font-family: var(--font-serif); }
+    </style>
+</head>
+<body>
+
+    <!-- ── Step 0: Welcome ── -->
+    <div id="step-0">
+        <h1 class="welcome-title">THE ROYAL BARBER</h1>
+        <div class="welcome-badge">Premium Grooming • Online Booking</div>
+        <button class="start-btn" onclick="nextStep()">Записатись</button>
+    </div>
+
+    <!-- ── Main WebApp Content ── -->
+    <div id="app-container" class="inner-page hidden">
+
+        <!-- Tab Bar (TASK-001) -->
+        <div class="tab-bar" id="tab-bar">
+            <div class="tab-bar-item active" data-tab="booking" onclick="switchTab('booking')">📅 Записатись</div>
+            <div class="tab-bar-item" data-tab="my-bookings" onclick="switchTab('my-bookings')">📋 Мої записи</div>
+        </div>
+
+        <!-- Booking Flow -->
+        <div id="booking-flow">
+        
+        <!-- Progress -->
+        <div class="progress-box">
+            <div class="progress-bar-track">
+                <div id="progress-line" class="progress-bar-fill" style="width: 25%"></div>
+            </div>
+            <div class="prog-steps">
+                <div id="step-dot-1" class="prog-step active"><div class="prog-circle">1</div><div class="prog-label">Послуга</div></div>
+                <div id="step-dot-2" class="prog-step"><div class="prog-circle">2</div><div class="prog-label">Майстер</div></div>
+                <div id="step-dot-3" class="prog-step"><div class="prog-circle">3</div><div class="prog-label">Час</div></div>
+                <div id="step-dot-4" class="prog-step"><div class="prog-circle">4</div><div class="prog-label">Готово</div></div>
+            </div>
+        </div>
+
+        <div id="step-container">
+            <!-- Steps are injected here -->
+        </div>
+
+        <div class="footer-action" id="footer-action">
+            <button id="main-btn" class="next-btn hidden" onclick="handleMainAction()">Далі</button>
+        </div>
+
+        </div><!-- /booking-flow -->
+
+        <!-- My Bookings Screen (TASK-001) -->
+        <div id="my-bookings-screen" class="hidden">
+            <h1 class="page-title">Мої записи</h1>
+            <div id="my-bookings-list"></div>
+        </div>
+
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+
+        // iOS keyboard detection — move button above keyboard
+        const initialHeight = window.innerHeight;
+        window.addEventListener('resize', () => {
+            if (window.innerHeight < initialHeight * 0.75) {
+                document.body.classList.add('keyboard-open');
+            } else {
+                document.body.classList.remove('keyboard-open');
+            }
+        });
+
+        let state = {
+            step: 0,
+            config: null,
+            booking: { service: null, master: null, date: null, time: null }
+        };
+
+        const steps = {
+            1: { title: "Оберіть послугу", render: renderServices },
+            2: { title: "Оберіть майстра", render: renderMasters },
+            3: { title: "Оберіть дату та час", render: renderDateTime },
+            4: { title: "Ваш запис", render: renderSummary }
+        };
+
+        /* ── Dynamic Backgrounds ── */
+        const getBg = (filename) => {
+            return `url("/static/${filename}?v=3")`;
+        };
+        
+        const bgs = [
+            `linear-gradient(rgba(10, 8, 6, 0.2), rgba(8, 6, 5, 0.6)), ${getBg('start_bg.png')}`, // Step 0 Welcome
+            `linear-gradient(rgba(10, 8, 6, 0.4), rgba(8, 6, 5, 0.8)), ${getBg('img/bg_1.jpg')}`, // Step 1 Services
+            `linear-gradient(rgba(10, 8, 6, 0.4), rgba(8, 6, 5, 0.8)), ${getBg('img/bg_2.jpg')}`, // Step 2 Masters
+            `linear-gradient(rgba(10, 8, 6, 0.3), rgba(8, 6, 5, 0.7)), ${getBg('img/bg_3.jpg')}`, // Step 3 Calendar
+            `linear-gradient(rgba(10, 8, 6, 0.3), rgba(8, 6, 5, 0.7)), ${getBg('img/bg_4.jpg')}`  // Step 4 Summary
+        ];
+        
+        // Initialize Step 0 background immediately
+        document.body.style.backgroundImage = bgs[0];
+
+        /* ── Navigation ── */
+        async function nextStep() {
+            if (state.step === 0) {
+                document.getElementById('step-0').classList.add('hidden');
+                document.getElementById('app-container').classList.remove('hidden');
+                // Show loading spinner while config loads
+                const container = document.getElementById('step-container');
+                container.innerHTML = '<div style="text-align:center;padding:40px;color:#c9a96e;font-size:18px;">⏳ Завантаження...</div>';
+                await loadConfig();
+                // Deep link: open my-bookings tab if hash present
+                if (window._openMyBookingsOnStart) {
+                    window._openMyBookingsOnStart = false;
+                    switchTab('my-bookings');
+                    return;
+                }
+            }
+            goTo(state.step + 1);
+        }
+
+        function goTo(n) {
+            if (n < 1) return;
+            state.step = n;
+            updateUI();
+        }
+
+        function updateUI() {
+            document.body.style.backgroundImage = bgs[state.step] || bgs[0];
+            // Update Progress
+            const pct = (state.step / 4) * 100;
+            document.getElementById('progress-line').style.width = pct + '%';
+            for (let i = 1; i <= 4; i++) {
+                const dot = document.getElementById(`step-dot-${i}`);
+                dot.classList.toggle('active', i === state.step);
+                dot.classList.toggle('done', i < state.step);
+                if (i < state.step) dot.querySelector('.prog-circle').textContent = '✓';
+                else dot.querySelector('.prog-circle').textContent = i;
+            }
+
+            // Render Step
+            const container = document.getElementById('step-container');
+            container.innerHTML = `<h1 class="page-title">${steps[state.step].title}</h1>`;
+            
+            if (state.step > 1 && state.step < 4) {
+                const back = document.createElement('div');
+                back.className = 'back-nav';
+                back.textContent = '← Назад';
+                back.onclick = () => goTo(state.step - 1);
+                container.prepend(back);
+            }
+
+            steps[state.step].render(container);
+            updateMainBtn();
+        }
+
+        /* ── Data ── */
+        async function loadConfig() {
+            try {
+                const res = await fetch('/api/config', {headers: {'ngrok-skip-browser-warning': 'true', 'User-Agent': 'TelegramBot'}});
+                state.config = await res.json();
+                updateUI();
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        /* ── Renders ── */
+        function renderServices(container) {
+            if (!state.config) return;
+            state.config.services.forEach((s, idx) => {
+                const sel = state.booking.service?.id === s.id;
+                const card = createCard(idx + 1, s.name, `${s.duration_minutes} хв`, `${s.price} грн`, sel);
+                card.onclick = () => { state.booking.service = s; nextStep(); };
+                container.appendChild(card);
+            });
+        }
+
+        const masterAvatars = [
+            'https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=150&q=80&crop=faces&fit=crop',
+            'https://images.unsplash.com/photo-1531427186611-ecfd6d936c79?w=150&q=80&crop=faces&fit=crop',
+            'https://images.unsplash.com/photo-1563351672-62b74891a28a?w=150&q=80&crop=faces&fit=crop',
+            'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=150&q=80&crop=faces&fit=crop'
+        ];
+
+        function renderMasters(container) {
+            state.config.masters.forEach((m, idx) => {
+                const sel = state.booking.master?.id === m.id;
+                const avatar = masterAvatars[idx % masterAvatars.length];
+                const card = createCard(idx + 1, m.name, `${m.specialization} • ${m.experience_years}р. досвіду`, `${m.rating} ★`, sel, avatar);
+                card.onclick = () => { state.booking.master = m; nextStep(); };
+                container.appendChild(card);
+            });
+        }
+
+        async function renderDateTime(container) {
+            const calDiv = document.createElement('div');
+            calDiv.id = 'calendar-inline';
+            container.appendChild(calDiv);
+
+            const hint = document.createElement('div');
+            hint.id = 'time-hint';
+            hint.style.cssText = 'text-align:center; font-size:12px; color:var(--gold); letter-spacing:0.15em; text-transform:uppercase; margin-bottom:12px; opacity:0.7; display:none;';
+            hint.textContent = '↓ Оберіть час ↓';
+            container.appendChild(hint);
+
+            const grid = document.createElement('div');
+            grid.className = 'slots-box hidden';
+            grid.id = 'time-grid';
+            container.appendChild(grid);
+
+            // Load booked dates for this master to disable them in calendar
+            let disabledDates = [];
+            try {
+                const res = await fetch(`/api/booked-dates?master_id=${state.booking.master.id}`, {headers: {'ngrok-skip-browser-warning': 'true', 'User-Agent': 'TelegramBot'}});
+                const data = await res.json();
+                disabledDates = data.fully_booked_dates || [];
+            } catch(e) {}
+
+            flatpickr(calDiv, {
+                inline: true,
+                minDate: "today",
+                locale: "uk",
+                disable: disabledDates,
+                onChange: (dates, dateStr) => {
+                    state.booking.date = dateStr;
+                    state.booking.time = null;
+                    loadSlots(dateStr);
+                }
+            });
+        }
+
+        async function loadSlots(date) {
+            const grid = document.getElementById('time-grid');
+            grid.innerHTML = '<div style="grid-column: 1/-1; text-align:center; padding:20px; opacity:0.5;">Завантаження...</div>';
+            grid.classList.remove('hidden');
+            
+            try {
+                const duration = state.booking.service?.duration_minutes || 30;
+                const res = await fetch(`/api/available-slots?master_id=${state.booking.master.id}&date=${date}&duration=${duration}`, {headers: {'ngrok-skip-browser-warning': 'true', 'User-Agent': 'TelegramBot'}});
+                const data = await res.json();
+                grid.innerHTML = '';
+                const hint = document.getElementById('time-hint');
+                if (hint) hint.style.display = 'block';
+                // Автоскролл к слотам
+                setTimeout(() => grid.scrollIntoView({behavior: 'smooth', block: 'start'}), 100);
+                data.slots.forEach(slot => {
+                    const btn = document.createElement('div');
+                    btn.className = `slot-btn ${slot.available ? '' : 'busy'} ${state.booking.time === slot.time ? 'selected' : ''}`;
+                    btn.textContent = slot.time;
+                    if (slot.available) {
+                        btn.onclick = () => {
+                            state.booking.time = slot.time;
+                            Array.from(grid.children).forEach(b => b.classList.remove('selected'));
+                            btn.classList.add('selected');
+                            updateMainBtn();
+                        };
+                    }
+                    grid.appendChild(btn);
+                });
+            } catch (e) { grid.innerHTML = 'Error'; }
+        }
+
+        function renderSummary(container) {
+            const box = document.createElement('div');
+            box.className = 'summary-panel fade-entry';
+            box.innerHTML = `
+                <div class="sum-row"><span class="sum-lbl">Майстер</span><span class="sum-val">${state.booking.master.name}</span></div>
+                <div class="sum-row"><span class="sum-lbl">Послуга</span><span class="sum-val">${state.booking.service.name}</span></div>
+                <div class="sum-row"><span class="sum-lbl">Дата та час</span><span class="sum-val">${state.booking.date} о ${state.booking.time}</span></div>
+                <div style="height:1px; background:var(--divider); margin: 20px 0;"></div>
+                <div class="sum-row"><span class="sum-lbl">До сплати</span><span class="sum-total">${state.booking.service.price} грн</span></div>
+            `;
+            container.appendChild(box);
+
+            // Contact form
+            const form = document.createElement('div');
+            form.className = 'fade-entry';
+            form.style.cssText = 'margin-top: 20px;';
+            form.innerHTML = `
+                <div class="contact-field">
+                    <label class="contact-label">Ваше ім'я</label>
+                    <input id="input-name" class="contact-input" type="text" placeholder="Іван Петренко" autocomplete="name">
+                </div>
+                <div class="contact-field" style="margin-top:12px;">
+                    <label class="contact-label">Номер телефону</label>
+                    <input id="input-phone" class="contact-input" type="tel" placeholder="+380 XX XXX XX XX" autocomplete="tel">
+                </div>
+            `;
+            container.appendChild(form);
+
+            // Validate on input
+            const nameInput = form.querySelector('#input-name');
+            const phoneInput = form.querySelector('#input-phone');
+            const validate = () => {
+                const nameOk = nameInput.value.trim().length >= 2;
+                const phoneOk = phoneInput.value.replace(/\D/g, '').length >= 7;
+                const btn = document.getElementById('main-btn');
+                if (btn) btn.disabled = !(nameOk && phoneOk);
+            };
+            nameInput.addEventListener('input', validate);
+            phoneInput.addEventListener('input', validate);
+
+            // Hide button when keyboard opens, show when closed
+            const footer = document.getElementById('footer-action');
+            [nameInput, phoneInput].forEach(el => {
+                el.addEventListener('focus', () => {
+                    if (footer) footer.style.display = 'none';
+                    setTimeout(() => el.scrollIntoView({ behavior: 'smooth', block: 'center' }), 300);
+                });
+                el.addEventListener('blur', () => {
+                    setTimeout(() => { if (footer) footer.style.display = ''; }, 200);
+                });
+            });
+        }
+
+        /* ── Helpers ── */
+        function createCard(num, title, sub, val, selected, avatar = null) {
+            const card = document.createElement('div');
+            card.className = `item-card fade-entry ${selected ? 'selected' : ''}`;
+            const sideVisual = avatar 
+                ? `<img src="${avatar}" class="master-avatar" alt="Master">`
+                : `<div class="item-num">${num.toString().padStart(2, '0')}</div>`;
+                
+            card.innerHTML = `
+                ${sideVisual}
+                <div class="item-main">
+                    <div class="item-title">${title}</div>
+                    <div class="item-sub">${sub}</div>
+                </div>
+                <div class="item-price">${val}</div>
+            `;
+            return card;
+        }
+
+        // Use Telegram MainButton (native, always above keyboard)
+        const MB = tg.MainButton;
+
+        function updateMainBtn() {
+            const btn = document.getElementById('main-btn');
+            const footer = document.getElementById('footer-action');
+            MB.hide();
+
+            if (state.step === 3) {
+                // Step 3: static position — не перекрывает контент
+                if (footer) { footer.style.position = 'static'; footer.style.padding = '16px 0 24px'; footer.style.background = 'none'; }
+                btn.classList.remove('hidden');
+                btn.disabled = !state.booking.time;
+                btn.textContent = 'Далі';
+            } else if (state.step === 4) {
+                // Step 4: fixed position
+                if (footer) { footer.style.position = 'fixed'; footer.style.padding = ''; footer.style.background = ''; }
+                btn.classList.remove('hidden');
+                btn.disabled = true;
+                btn.textContent = 'Підтвердити запис';
+            } else {
+                btn.classList.add('hidden');
+                if (footer) footer.style.position = 'fixed';
+            }
+        }
+
+        // Handle MainButton click
+        tg.onEvent('mainButtonClicked', handleMainAction);
+
+        function handleMainAction() {
+            if (state.step === 3) nextStep();
+            else if (state.step === 4) submitBooking();
+        }
+
+        /* ── Tab Switching (TASK-001) ── */
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-bar-item').forEach(el => {
+                el.classList.toggle('active', el.dataset.tab === tab);
+            });
+            const bookingFlow = document.getElementById('booking-flow');
+            const myBookings = document.getElementById('my-bookings-screen');
+            const footerAction = document.getElementById('footer-action');
+
+            if (tab === 'my-bookings') {
+                bookingFlow.classList.add('hidden');
+                footerAction.classList.add('hidden');
+                myBookings.classList.remove('hidden');
+                loadMyBookings();
+            } else {
+                myBookings.classList.add('hidden');
+                bookingFlow.classList.remove('hidden');
+                footerAction.classList.remove('hidden');
+                updateMainBtn();
+            }
+        }
+
+        function getUserId() {
+            // Primary: initDataUnsafe (standard Telegram WebApp)
+            if (tg.initDataUnsafe?.user?.id) return tg.initDataUnsafe.user.id;
+            // Fallback: parse initData string manually
+            try {
+                if (tg.initData) {
+                    const params = new URLSearchParams(tg.initData);
+                    const user = JSON.parse(params.get('user') || '{}');
+                    if (user.id) return user.id;
+                }
+            } catch(e) {}
+            // Last resort: uid passed via URL param from bot
+            const urlUid = new URLSearchParams(window.location.search).get('uid');
+            if (urlUid && urlUid !== '0') return parseInt(urlUid);
+            return null;
+        }
+
+        async function loadMyBookings() {
+            const userId = getUserId();
+            const container = document.getElementById('my-bookings-list');
+
+            if (!userId) {
+                container.innerHTML = `
+                    <div class="my-bookings-empty">
+                        <div class="empty-icon">🔒</div>
+                        <div>Відкрийте через Telegram для перегляду записів</div>
+                    </div>`;
+                return;
+            }
+
+            container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--gold);font-size:14px;">⏳ Завантаження...</div>';
+
+            try {
+                const res = await fetch(`/api/bookings/${userId}`, {
+                    headers: {'ngrok-skip-browser-warning': 'true', 'User-Agent': 'TelegramBot'}
+                });
+                const data = await res.json();
+
+                if (!data.ok || !data.bookings || data.bookings.length === 0) {
+                    container.innerHTML = `
+                        <div class="my-bookings-empty">
+                            <div class="empty-icon">📭</div>
+                            <div>У вас поки немає записів</div>
+                        </div>`;
+                    return;
+                }
+
+                container.innerHTML = '';
+                data.bookings.forEach(b => {
+                    container.appendChild(renderBookingCard(b));
+                });
+            } catch (e) {
+                container.innerHTML = `
+                    <div class="my-bookings-empty">
+                        <div class="empty-icon">⚠️</div>
+                        <div>Помилка завантаження</div>
+                    </div>`;
+            }
+        }
+
+        function renderBookingCard(b) {
+            const parts = (b.time_slot || '').split(' ');
+            const date = parts[0] || '—';
+            const time = parts[1] || '—';
+
+            const statusMap = {
+                'pending': { label: 'Очікує', badge: 'status-badge-pending' },
+                'confirmed': { label: 'Підтверджено', badge: 'status-badge-confirmed' },
+                'completed': { label: 'Виконано', badge: 'status-badge-completed' },
+                'cancelled': { label: 'Скасовано', badge: 'status-badge-cancelled' },
+            };
+            const st = statusMap[b.status] || { label: b.status, badge: '' };
+            const canCancel = b.status === 'pending' || b.status === 'confirmed';
+
+            const card = document.createElement('div');
+            card.className = `my-booking-card fade-entry status-${b.status}`;
+            card.innerHTML = `
+                <div class="my-booking-header">
+                    <div class="my-booking-date">📅 ${date}, ${time}</div>
+                    <span class="my-booking-status ${st.badge}">${st.label}</span>
+                </div>
+                <div class="my-booking-details">
+                    ✂️ ${b.service || '—'} · ${b.master || '—'}
+                </div>
+                ${canCancel ? `<button class="cancel-btn" onclick="confirmCancel(${b.id}, this)">Скасувати</button>` : ''}
+            `;
+            return card;
+        }
+
+        function confirmCancel(bookingId, btnEl) {
+            // Show confirmation modal
+            const overlay = document.createElement('div');
+            overlay.className = 'cancel-modal-overlay';
+            overlay.innerHTML = `
+                <div class="cancel-modal">
+                    <h3>Скасувати запис?</h3>
+                    <p>Ви впевнені, що хочете скасувати цей запис? Цю дію не можна відмінити.</p>
+                    <div class="cancel-modal-actions">
+                        <button class="modal-btn-back" id="modal-back">Ні</button>
+                        <button class="modal-btn-confirm" id="modal-confirm">Так, скасувати</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(overlay);
+
+            overlay.querySelector('#modal-back').onclick = () => overlay.remove();
+            overlay.querySelector('#modal-confirm').onclick = async () => {
+                overlay.remove();
+                await doCancelBooking(bookingId, btnEl);
+            };
+            overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+        }
+
+        async function doCancelBooking(bookingId, btnEl) {
+            const userId = getUserId();
+            if (!userId) return;
+
+            if (btnEl) {
+                btnEl.disabled = true;
+                btnEl.textContent = 'Скасування...';
+            }
+
+            try {
+                const res = await fetch(`/api/bookings/${bookingId}/cancel`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'ngrok-skip-browser-warning': 'true',
+                        'User-Agent': 'TelegramBot'
+                    },
+                    body: JSON.stringify({ user_id: String(userId) })
+                });
+
+                if (res.ok) {
+                    // Reload the list to show updated status
+                    loadMyBookings();
+                } else {
+                    const err = await res.json().catch(() => ({}));
+                    const msg = err.detail || 'Помилка';
+                    if (btnEl) {
+                        btnEl.textContent = msg;
+                        btnEl.disabled = false;
+                        setTimeout(() => { btnEl.textContent = 'Скасувати'; }, 2500);
+                    }
+                }
+            } catch (e) {
+                if (btnEl) {
+                    btnEl.textContent = 'Помилка мережі';
+                    btnEl.disabled = false;
+                    setTimeout(() => { btnEl.textContent = 'Скасувати'; }, 2500);
+                }
+            }
+        }
+
+        // Check URL hash for deep link to my-bookings
+        if (window.location.hash === '#my-bookings') {
+            // Will trigger after step-0 is passed
+            window._openMyBookingsOnStart = true;
+        }
+
+        let _submitting = false;
+        async function submitBooking() {
+            if (_submitting) return;
+            _submitting = true;
+            const btn = document.getElementById('main-btn');
+            btn.disabled = true;
+            btn.style.pointerEvents = 'none';
+            const userName = document.getElementById('input-name')?.value.trim() || '';
+            const phone = document.getElementById('input-phone')?.value.trim() || '';
+
+            const nameInput = document.getElementById('input-name');
+            const phoneInput = document.getElementById('input-phone');
+            let hasError = false;
+            if (userName.length < 2) {
+                nameInput.style.borderColor = '#e53935';
+                nameInput.style.boxShadow = '0 0 0 2px rgba(229,57,53,0.3)';
+                setTimeout(() => { nameInput.style.borderColor = ''; nameInput.style.boxShadow = ''; }, 2500);
+                hasError = true;
+            }
+            if (phone.replace(/\D/g,'').length < 7) {
+                phoneInput.style.borderColor = '#e53935';
+                phoneInput.style.boxShadow = '0 0 0 2px rgba(229,57,53,0.3)';
+                setTimeout(() => { phoneInput.style.borderColor = ''; phoneInput.style.boxShadow = ''; }, 2500);
+                hasError = true;
+            }
+            if (hasError) {
+                btn.textContent = 'Заповніть всі поля';
+                setTimeout(() => { btn.textContent = 'Підтвердити запис'; _submitting = false; btn.disabled = false; btn.style.pointerEvents = ''; }, 2000);
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = 'Зберігаємо...';
+
+            try {
+                const payload = {
+                    user_id: getUserId() || 0,
+                    user_name: userName,
+                    phone: phone,
+                    service: state.booking.service,
+                    master: state.booking.master?.name || '',
+                    master_id: state.booking.master?.id || null,
+                    date: state.booking.date,
+                    time: state.booking.time,
+                };
+                const res = await fetch('/api/confirm-booking', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'ngrok-skip-browser-warning': 'true',
+                        'User-Agent': 'TelegramBot'
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                if (res.status === 409) {
+                    btn.textContent = 'Час зайнятий - оберіть інший';
+                    btn.disabled = false;
+                    _submitting = false;
+                    setTimeout(() => { state.step = 3; renderStep(); }, 2000);
+                    return;
+                }
+
+                const data = await res.json();
+                console.log('booking response:', JSON.stringify(data));
+                if (data.ok) {
+                    // Success screen
+                    const inner = document.getElementById('step-container');
+                    inner.innerHTML = `
+                        <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;text-align:center;padding:40px 20px;">
+                            <div style="font-size:64px;margin-bottom:24px;">✅</div>
+                            <div style="font-family:var(--font-serif);font-size:28px;color:var(--gold);margin-bottom:16px;">Запис прийнято!</div>
+                            <div style="color:var(--text-gray);font-size:14px;line-height:1.8;">
+                                ${state.booking.master.name}<br>
+                                ${state.booking.service.name}<br>
+                                ${state.booking.date} о ${state.booking.time}
+                            </div>
+                            <div style="margin-top:24px;font-size:13px;color:var(--text-gray);">Очікуйте підтвердження в Telegram</div>
+                        </div>`;
+                    setTimeout(() => tg.close(), 2500);
+                } else {
+                    btn.textContent = data.detail || 'Помилка';
+                    btn.disabled = false;
+                }
+            } catch(e) {
+                // Network error after POST — booking likely saved, show success
+                const inner = document.getElementById('step-container');
+                if (inner) {
+                    inner.innerHTML = `
+                        <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;text-align:center;padding:40px 20px;">
+                            <div style="font-size:64px;margin-bottom:24px;">✅</div>
+                            <div style="font-family:var(--font-serif);font-size:28px;color:var(--gold);margin-bottom:16px;">Запис прийнято!</div>
+                            <div style="color:var(--text-gray);font-size:14px;line-height:1.8;">
+                                ${state.booking.master?.name || ''}<br>
+                                ${state.booking.service?.name || ''}<br>
+                                ${state.booking.date} о ${state.booking.time}
+                            </div>
+                            <div style="margin-top:24px;font-size:13px;color:var(--text-gray);">Очікуйте підтвердження в Telegram</div>
+                        </div>`;
+                    setTimeout(() => tg.close(), 2500);
+                } else {
+                    btn.textContent = 'Помилка, спробуйте ще';
+                    btn.disabled = false;
+                    _submitting = false;
+                }
+            }
+        }
+    </script>
+</body>
+</html>

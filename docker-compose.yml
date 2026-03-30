@@ -1,0 +1,15 @@
+version: "3.9"
+
+services:
+  bot:
+    build: .
+    container_name: barber_bot
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./barbershop.db:/app/barbershop.db
+      - ./business_config.json:/app/business_config.json
+      - ./webapp:/app/webapp
+    command: python main.py

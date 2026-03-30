@@ -1,0 +1,8 @@
+aiogram>=3.0
+pydantic-settings>=2.0
+python-dotenv>=1.0
+sqlalchemy>=2.0
+fastapi>=0.100
+uvicorn>=0.20
+python-multipart
+httpx>=0.24
