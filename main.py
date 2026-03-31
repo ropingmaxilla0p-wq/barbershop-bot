@@ -11,6 +11,35 @@ from handlers import router
 from reminders import reminder_loop
 
 
+def init_master_profiles():
+    """Ініціалізує профілі майстрів з business_config.json при першому запуску."""
+    import json, os
+    from models import SessionLocal, MasterProfile
+    try:
+        config_path = "business_config.json"
+        if not os.path.exists(config_path):
+            return
+        with open(config_path) as f:
+            cfg = json.load(f)
+        masters = cfg.get("masters", [])
+        db = SessionLocal()
+        try:
+            for m in masters:
+                if not m.get("telegram_id"):
+                    continue
+                exists = db.query(MasterProfile).filter(
+                    MasterProfile.master_id == m["id"]
+                ).first()
+                if not exists:
+                    db.add(MasterProfile(master_id=m["id"], telegram_id=str(m["telegram_id"])))
+            db.commit()
+            print(f"✅ Майстри ініціалізовані: {[m['name'] for m in masters if m.get('telegram_id')]}")
+        finally:
+            db.close()
+    except Exception as e:
+        print(f"⚠️ Помилка ініціалізації майстрів: {e}")
+
+
 async def main():
     import uvicorn
     from webapp_server import app as webapp_app
@@ -22,6 +51,7 @@ async def main():
     dp = Dispatcher()
     dp.include_router(router)
 
+    init_master_profiles()
     print("🚀 Barber Bot v2 запущено і готове до роботи!")
     print(f"   WEBAPP_URL: {settings.WEBAPP_URL or '(не задано — використовується inline FSM)'}")
     print(f"   ADMIN_IDS: {settings.ADMIN_IDS or '(не задано)'}")
