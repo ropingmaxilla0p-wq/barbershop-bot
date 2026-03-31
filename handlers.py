@@ -11,7 +11,7 @@ import logging
 import os
 from datetime import datetime, timedelta
 from aiogram import Router, F, Bot
-from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo
 from aiogram.filters import Command, CommandStart
 from aiogram.fsm.context import FSMContext
 
@@ -1076,10 +1076,9 @@ def _get_master_profile(telegram_id: str):
             MasterProfile.telegram_id == telegram_id
         ).first()
         if profile:
-            # snapshot
-            master_id = profile.master_id
-            db.expunge(profile)
-            return profile
+            # Return a simple namespace to avoid detached instance issues
+            from types import SimpleNamespace
+            return SimpleNamespace(master_id=profile.master_id, telegram_id=profile.telegram_id)
         return None
     finally:
         db.close()
@@ -1093,9 +1092,16 @@ def _get_master_name_by_id(master_id: int) -> str:
     return f"Майстер #{master_id}"
 
 
-def _get_master_panel_keyboard() -> InlineKeyboardMarkup:
+def _get_master_panel_keyboard(master_id: int = None, telegram_id: str = None) -> InlineKeyboardMarkup:
     from aiogram.utils.keyboard import InlineKeyboardBuilder
     builder = InlineKeyboardBuilder()
+    # WebApp кнопка — если есть данные
+    if master_id and telegram_id and settings.WEBAPP_URL:
+        webapp_base = settings.WEBAPP_URL.replace("/webapp", "")
+        builder.row(InlineKeyboardButton(
+            text="📱 Відкрити WebApp панель",
+            web_app=WebAppInfo(url=f"{webapp_base}/master-webapp?master_id={master_id}&uid={telegram_id}")
+        ))
     builder.row(InlineKeyboardButton(text="📅 Мої записи сьогодні", callback_data="master_today"))
     builder.row(InlineKeyboardButton(text="📆 Записи на тиждень", callback_data="master_week"))
     builder.row(InlineKeyboardButton(text="🚫 Заблокувати день", callback_data="master_block_day"))
@@ -1120,16 +1126,17 @@ async def cmd_master(message: Message, state: FSMContext):
     await message.answer(
         f"💈 <b>Панель майстра — {master_name}</b>\n\nОберіть дію:",
         parse_mode="HTML",
-        reply_markup=_get_master_panel_keyboard(),
+        reply_markup=_get_master_panel_keyboard(master_id=profile.master_id, telegram_id=telegram_id),
     )
 
 
 @router.callback_query(F.data == "master_today")
 async def cb_master_today(callback: CallbackQuery):
+    await callback.answer()  # підтверджуємо одразу, щоб уникнути дублікатів
     telegram_id = str(callback.from_user.id)
     profile = _get_master_profile(telegram_id)
     if not profile:
-        await callback.answer("⛔ Доступ заборонено.", show_alert=True)
+        await callback.message.answer("⛔ Доступ заборонено.")
         return
 
     master_name = _get_master_name_by_id(profile.master_id)
@@ -1184,10 +1191,11 @@ async def cb_master_today(callback: CallbackQuery):
 
 @router.callback_query(F.data == "master_week")
 async def cb_master_week(callback: CallbackQuery):
+    await callback.answer()  # підтверджуємо одразу
     telegram_id = str(callback.from_user.id)
     profile = _get_master_profile(telegram_id)
     if not profile:
-        await callback.answer("⛔ Доступ заборонено.", show_alert=True)
+        await callback.message.answer("⛔ Доступ заборонено.")
         return
 
     master_name = _get_master_name_by_id(profile.master_id)
@@ -1240,10 +1248,11 @@ async def cb_master_week(callback: CallbackQuery):
 
 @router.callback_query(F.data == "master_block_day")
 async def cb_master_block_day(callback: CallbackQuery, state: FSMContext):
+    await callback.answer()  # підтверджуємо одразу
     telegram_id = str(callback.from_user.id)
     profile = _get_master_profile(telegram_id)
     if not profile:
-        await callback.answer("⛔ Доступ заборонено.", show_alert=True)
+        await callback.message.answer("⛔ Доступ заборонено.")
         return
 
     await state.set_data({"master_id_for_block": profile.master_id})
@@ -1343,10 +1352,11 @@ async def process_block_date(message: Message, state: FSMContext, bot: Bot):
 
 @router.callback_query(F.data == "master_blocked_list")
 async def cb_master_blocked_list(callback: CallbackQuery):
+    await callback.answer()  # підтверджуємо одразу
     telegram_id = str(callback.from_user.id)
     profile = _get_master_profile(telegram_id)
     if not profile:
-        await callback.answer("⛔ Доступ заборонено.", show_alert=True)
+        await callback.message.answer("⛔ Доступ заборонено.")
         return
 
     master_name = _get_master_name_by_id(profile.master_id)
@@ -1393,10 +1403,11 @@ async def cb_master_blocked_list(callback: CallbackQuery):
 
 @router.callback_query(F.data.startswith("master_unblock:"))
 async def cb_master_unblock(callback: CallbackQuery):
+    await callback.answer()  # підтверджуємо одразу
     telegram_id = str(callback.from_user.id)
     profile = _get_master_profile(telegram_id)
     if not profile:
-        await callback.answer("⛔ Доступ заборонено.", show_alert=True)
+        await callback.message.answer("⛔ Доступ заборонено.")
         return
 
     date_str = callback.data.split(":")[1]
@@ -1419,10 +1430,11 @@ async def cb_master_unblock(callback: CallbackQuery):
 
 @router.callback_query(F.data == "master_pending_list")
 async def cb_master_pending_list(callback: CallbackQuery):
+    await callback.answer()  # підтверджуємо одразу
     telegram_id = str(callback.from_user.id)
     profile = _get_master_profile(telegram_id)
     if not profile:
-        await callback.answer("⛔ Доступ заборонено.", show_alert=True)
+        await callback.message.answer("⛔ Доступ заборонено.")
         return
 
     db = SessionLocal()
@@ -1476,10 +1488,11 @@ async def cb_master_pending_list(callback: CallbackQuery):
 
 @router.callback_query(F.data == "master_back")
 async def cb_master_back(callback: CallbackQuery):
+    await callback.answer()  # підтверджуємо одразу
     telegram_id = str(callback.from_user.id)
     profile = _get_master_profile(telegram_id)
     if not profile:
-        await callback.answer("⛔ Доступ заборонено.", show_alert=True)
+        await callback.message.answer("⛔ Доступ заборонено.")
         return
     master_name = _get_master_name_by_id(profile.master_id)
     await callback.message.edit_text(
@@ -1492,10 +1505,11 @@ async def cb_master_back(callback: CallbackQuery):
 
 @router.callback_query(F.data.startswith("master_confirm:"))
 async def cb_master_confirm(callback: CallbackQuery, bot: Bot):
+    await callback.answer()  # підтверджуємо одразу
     telegram_id = str(callback.from_user.id)
     profile = _get_master_profile(telegram_id)
     if not profile:
-        await callback.answer("⛔ Доступ заборонено.", show_alert=True)
+        await callback.message.answer("⛔ Доступ заборонено.")
         return
 
     booking_id = int(callback.data.split(":")[1])
@@ -1539,10 +1553,11 @@ async def cb_master_confirm(callback: CallbackQuery, bot: Bot):
 
 @router.callback_query(F.data.startswith("master_cancel:"))
 async def cb_master_cancel(callback: CallbackQuery, bot: Bot):
+    await callback.answer()  # підтверджуємо одразу
     telegram_id = str(callback.from_user.id)
     profile = _get_master_profile(telegram_id)
     if not profile:
-        await callback.answer("⛔ Доступ заборонено.", show_alert=True)
+        await callback.message.answer("⛔ Доступ заборонено.")
         return
 
     booking_id = int(callback.data.split(":")[1])
@@ -1586,10 +1601,11 @@ async def cb_master_cancel(callback: CallbackQuery, bot: Bot):
 
 @router.callback_query(F.data.startswith("master_complete:"))
 async def cb_master_complete(callback: CallbackQuery, bot: Bot):
+    await callback.answer()  # підтверджуємо одразу
     telegram_id = str(callback.from_user.id)
     profile = _get_master_profile(telegram_id)
     if not profile:
-        await callback.answer("⛔ Доступ заборонено.", show_alert=True)
+        await callback.message.answer("⛔ Доступ заборонено.")
         return
 
     booking_id = int(callback.data.split(":")[1])

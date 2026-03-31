@@ -77,6 +77,98 @@ async def serve_webapp():
         }
     )
 
+@app.get("/master-webapp")
+async def serve_master_webapp():
+    return FileResponse(
+        "webapp/static/master.html",
+        headers={
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+            "Pragma": "no-cache",
+            "Expires": "0"
+        }
+    )
+
+@app.get("/api/master/bookings")
+async def master_bookings(master_id: int, period: str = "today"):
+    from datetime import datetime, timedelta
+    db = SessionLocal()
+    try:
+        today = datetime.now().date()
+        if period == "today":
+            date_str = today.strftime("%Y-%m-%d")
+            bookings = db.query(Booking).filter(
+                Booking.master_id == master_id,
+                Booking.time_slot.like(f"{date_str}%"),
+                Booking.status.in_(["pending", "confirmed"])
+            ).order_by(Booking.time_slot).all()
+        elif period == "tomorrow":
+            tomorrow = (today + timedelta(days=1)).strftime("%Y-%m-%d")
+            bookings = db.query(Booking).filter(
+                Booking.master_id == master_id,
+                Booking.time_slot.like(f"{tomorrow}%"),
+                Booking.status.in_(["pending", "confirmed"])
+            ).order_by(Booking.time_slot).all()
+        else:  # week
+            week_dates = [(today + timedelta(days=i)).strftime("%Y-%m-%d") for i in range(7)]
+            from sqlalchemy import or_
+            bookings = db.query(Booking).filter(
+                Booking.master_id == master_id,
+                or_(*[Booking.time_slot.like(f"{d}%") for d in week_dates]),
+                Booking.status.in_(["pending", "confirmed"])
+            ).order_by(Booking.time_slot).all()
+
+        result = [
+            {
+                "id": b.id,
+                "time_slot": b.time_slot,
+                "user_name": b.user_name or "—",
+                "service": b.service or "—",
+                "phone": b.phone or "—",
+                "status": b.status,
+            }
+            for b in bookings
+        ]
+        return {"ok": True, "bookings": result}
+    finally:
+        db.close()
+
+@app.post("/api/master/complete")
+async def master_complete(data: dict):
+    booking_id = data.get("booking_id")
+    master_id = data.get("master_id")
+    db = SessionLocal()
+    try:
+        b = db.query(Booking).filter(Booking.id == booking_id, Booking.master_id == master_id).first()
+        if not b:
+            raise HTTPException(status_code=404, detail="Booking not found")
+        b.status = "completed"
+        db.commit()
+        if settings.OWNER_CHAT_ID:
+            await send_telegram_message(settings.OWNER_CHAT_ID,
+                f"✅ Майстер завершив запис #{booking_id}\n👤 {b.user_name} | ✂️ {b.service}")
+        return {"ok": True}
+    finally:
+        db.close()
+
+@app.post("/api/master/cancel")
+async def master_cancel(data: dict):
+    booking_id = data.get("booking_id")
+    master_id = data.get("master_id")
+    db = SessionLocal()
+    try:
+        b = db.query(Booking).filter(Booking.id == booking_id, Booking.master_id == master_id).first()
+        if not b:
+            raise HTTPException(status_code=404, detail="Booking not found")
+        b.status = "cancelled"
+        b.cancelled_by = "master"
+        db.commit()
+        if settings.OWNER_CHAT_ID:
+            await send_telegram_message(settings.OWNER_CHAT_ID,
+                f"❌ Майстер скасував запис #{booking_id}\n👤 {b.user_name} | ✂️ {b.service}")
+        return {"ok": True}
+    finally:
+        db.close()
+
 @app.head("/webapp")
 async def serve_webapp_head():
     from fastapi.responses import Response
@@ -287,6 +379,7 @@ async def send_telegram_message(chat_id: int | str, text: str) -> bool:
 
 async def send_confirmation(user_id: int | str, booking_data: dict) -> None:
     """Send a beautiful HTML confirmation to the client."""
+    logger.warning(f"[CONFIRM] Sending confirmation to user_id={user_id}")
     service_name = booking_data.get("service_name", "—")
     master_name = booking_data.get("master_name", "—")
     date = booking_data.get("date", "—")

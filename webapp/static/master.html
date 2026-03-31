@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>THE ROYAL BARBER • Панель майстра</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --gold:         #D4AF37;
+            --gold-bright:  #F9E27D;
+            --gold-deep:    #996515;
+            --gold-glow:    rgba(212, 175, 55, 0.4);
+            --bg-body:      #0a0a0a;
+            --bg-card:      rgba(15, 12, 10, 0.92);
+            --bg-card2:     rgba(22, 18, 12, 0.95);
+            --text-white:   #FFFFFF;
+            --text-gold:    #D4AF37;
+            --text-gray:    #9A9382;
+            --divider:      rgba(212, 175, 55, 0.15);
+            --gold-gradient: linear-gradient(135deg, #996515 0%, #D4AF37 45%, #F9E27D 50%, #D4AF37 55%, #996515 100%);
+            --font-sans:    'Montserrat', sans-serif;
+            --font-serif:   'Playfair Display', serif;
+            --red:          #e74c3c;
+            --green:        #2ecc71;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            font-family: var(--font-sans);
+            background-color: var(--bg-body);
+            color: var(--text-white);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* ── Header ── */
+        .header {
+            background: rgba(10, 8, 5, 0.98);
+            border-bottom: 1px solid var(--divider);
+            padding: 14px 16px 10px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+
+        .header-top {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .header-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--gold-gradient);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        .header-info { flex: 1; min-width: 0; }
+
+        .header-title {
+            font-family: var(--font-serif);
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-gold);
+            letter-spacing: 0.05em;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .header-sub {
+            font-size: 11px;
+            color: var(--text-gray);
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            margin-top: 2px;
+        }
+
+        /* ── Tabs ── */
+        .tabs {
+            display: flex;
+            gap: 6px;
+            overflow-x: auto;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+
+        .tabs::-webkit-scrollbar { display: none; }
+
+        .tab-btn {
+            flex: 1;
+            min-width: 80px;
+            padding: 8px 12px;
+            background: transparent;
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            color: var(--text-gray);
+            font-family: var(--font-sans);
+            font-size: 12px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s;
+            white-space: nowrap;
+        }
+
+        .tab-btn.active {
+            background: var(--gold-gradient);
+            border-color: transparent;
+            color: #000;
+            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);
+        }
+
+        .tab-btn:not(.active):active {
+            background: rgba(212, 175, 55, 0.08);
+            color: var(--gold);
+        }
+
+        /* ── Content ── */
+        .content {
+            padding: 16px 16px 80px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* ── Date label ── */
+        .date-label {
+            font-size: 11px;
+            color: var(--text-gray);
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            margin-bottom: 14px;
+            padding-left: 2px;
+        }
+
+        /* ── Booking card ── */
+        .booking-card {
+            background: var(--bg-card);
+            border: 1px solid var(--divider);
+            border-radius: 10px;
+            padding: 16px;
+            margin-bottom: 12px;
+            position: relative;
+            overflow: hidden;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .booking-card::before {
+            content: '';
+            position: absolute;
+            left: 0; top: 0; bottom: 0;
+            width: 3px;
+            background: var(--gold-gradient);
+        }
+
+        .booking-card.status-completed::before { background: var(--green); }
+        .booking-card.status-cancelled::before { background: var(--red); }
+
+        .booking-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .booking-time {
+            font-family: var(--font-serif);
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--text-gold);
+            line-height: 1;
+        }
+
+        .booking-status {
+            font-size: 11px;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .booking-status.pending  { background: rgba(212, 175, 55, 0.15); color: var(--gold); border: 1px solid rgba(212,175,55,0.3); }
+        .booking-status.confirmed { background: rgba(46, 204, 113, 0.12); color: var(--green); border: 1px solid rgba(46,204,113,0.3); }
+        .booking-status.completed { background: rgba(46, 204, 113, 0.08); color: #27ae60; border: 1px solid rgba(46,204,113,0.2); }
+        .booking-status.cancelled { background: rgba(231, 76, 60, 0.1); color: var(--red); border: 1px solid rgba(231,76,60,0.2); }
+
+        .booking-body { margin-bottom: 14px; }
+
+        .booking-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 6px;
+            font-size: 13px;
+        }
+
+        .booking-row:last-child { margin-bottom: 0; }
+
+        .booking-row-icon {
+            font-size: 14px;
+            width: 20px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .booking-row-label {
+            color: var(--text-gray);
+            min-width: 60px;
+            flex-shrink: 0;
+        }
+
+        .booking-row-value {
+            color: var(--text-white);
+            font-weight: 500;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .booking-phone a {
+            color: var(--gold);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        /* ── Action buttons ── */
+        .booking-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .action-btn {
+            flex: 1;
+            padding: 10px 12px;
+            border: none;
+            border-radius: 6px;
+            font-family: var(--font-sans);
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+
+        .btn-complete {
+            background: rgba(46, 204, 113, 0.12);
+            border: 1px solid rgba(46, 204, 113, 0.35);
+            color: var(--green);
+        }
+
+        .btn-complete:active {
+            background: rgba(46, 204, 113, 0.25);
+            transform: scale(0.97);
+        }
+
+        .btn-cancel {
+            background: rgba(231, 76, 60, 0.1);
+            border: 1px solid rgba(231, 76, 60, 0.3);
+            color: var(--red);
+        }
+
+        .btn-cancel:active {
+            background: rgba(231, 76, 60, 0.2);
+            transform: scale(0.97);
+        }
+
+        .action-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        /* ── Empty state ── */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            animation: fadeIn 0.4s ease;
+        }
+
+        .empty-icon {
+            font-size: 52px;
+            margin-bottom: 16px;
+            display: block;
+        }
+
+        .empty-title {
+            font-family: var(--font-serif);
+            font-size: 22px;
+            color: var(--text-gold);
+            margin-bottom: 8px;
+        }
+
+        .empty-sub {
+            font-size: 13px;
+            color: var(--text-gray);
+            line-height: 1.6;
+        }
+
+        /* ── Loader ── */
+        .loader {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 60px 20px;
+            gap: 16px;
+        }
+
+        .loader-spinner {
+            width: 36px;
+            height: 36px;
+            border: 2px solid rgba(212, 175, 55, 0.15);
+            border-top-color: var(--gold);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loader-text {
+            font-size: 12px;
+            color: var(--text-gray);
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+        }
+
+        /* ── Error state ── */
+        .error-state {
+            text-align: center;
+            padding: 50px 20px;
+        }
+
+        .error-icon { font-size: 40px; margin-bottom: 12px; }
+        .error-title { font-size: 16px; color: var(--red); margin-bottom: 8px; }
+        .error-sub { font-size: 13px; color: var(--text-gray); }
+
+        .retry-btn {
+            margin-top: 16px;
+            padding: 10px 24px;
+            background: transparent;
+            border: 1px solid var(--divider);
+            color: var(--text-gold);
+            font-family: var(--font-sans);
+            font-size: 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+
+        /* ── Access denied ── */
+        #access-denied {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 40px;
+            text-align: center;
+        }
+
+        #access-denied .icon { font-size: 60px; margin-bottom: 20px; }
+        #access-denied .title {
+            font-family: var(--font-serif);
+            font-size: 24px;
+            color: var(--red);
+            margin-bottom: 10px;
+        }
+        #access-denied .sub { font-size: 14px; color: var(--text-gray); line-height: 1.6; }
+
+        /* ── Main app ── */
+        #app {
+            display: none;
+        }
+
+        /* ── Toast ── */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: rgba(20, 16, 10, 0.96);
+            border: 1px solid var(--divider);
+            color: var(--text-white);
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            z-index: 9999;
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.6);
+            white-space: nowrap;
+            max-width: 90vw;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            backdrop-filter: blur(20px);
+        }
+
+        .toast.show { transform: translateX(-50%) translateY(0); }
+        .toast.success { border-color: rgba(46, 204, 113, 0.4); }
+        .toast.error   { border-color: rgba(231, 76, 60, 0.4); }
+
+        /* ── Week section headers ── */
+        .week-section {
+            margin-bottom: 20px;
+        }
+
+        .week-date-header {
+            font-size: 11px;
+            color: var(--text-gold);
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            padding: 6px 0 10px;
+            border-bottom: 1px solid var(--divider);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .week-date-header .count-badge {
+            background: rgba(212, 175, 55, 0.15);
+            color: var(--gold);
+            font-size: 10px;
+            padding: 2px 7px;
+            border-radius: 10px;
+            font-weight: 600;
+        }
+
+        /* ── Ornament line ── */
+        .ornament {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+        .ornament-line { flex: 1; height: 1px; background: var(--divider); }
+        .ornament-icon { font-size: 14px; color: var(--text-gold); opacity: 0.6; }
+    </style>
+</head>
+<body>
+
+<div id="access-denied">
+    <div class="icon">⛔</div>
+    <div class="title">Доступ заборонено</div>
+    <div class="sub" id="denied-reason">Ви не зареєстровані як майстер або передано невірні параметри.</div>
+</div>
+
+<div id="app">
+    <div class="header">
+        <div class="header-top">
+            <div class="header-icon">💈</div>
+            <div class="header-info">
+                <div class="header-title" id="master-name">Панель майстра</div>
+                <div class="header-sub">The Gentleman's Den</div>
+            </div>
+        </div>
+        <div class="tabs">
+            <button class="tab-btn active" data-period="today" onclick="switchTab('today')">Сьогодні</button>
+            <button class="tab-btn" data-period="tomorrow" onclick="switchTab('tomorrow')">Завтра</button>
+            <button class="tab-btn" data-period="week" onclick="switchTab('week')">Тиждень</button>
+        </div>
+    </div>
+
+    <div class="content" id="content">
+        <!-- Dynamic content -->
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── Init Telegram WebApp ──
+const tg = window.Telegram?.WebApp;
+if (tg) {
+    tg.ready();
+    tg.expand();
+}
+
+// ── Parse URL params ──
+const params = new URLSearchParams(window.location.search);
+const MASTER_ID = parseInt(params.get('master_id') || '0');
+const UID = params.get('uid') || '';
+
+// ── State ──
+let currentPeriod = 'today';
+let isLoading = false;
+
+// ── Date helpers ──
+function formatDate(date) {
+    return date.toISOString().split('T')[0];
+}
+
+function getDateLabel(period) {
+    const today = new Date();
+    if (period === 'today') {
+        return today.toLocaleDateString('uk-UA', { weekday: 'long', day: 'numeric', month: 'long' });
+    }
+    if (period === 'tomorrow') {
+        const t = new Date(today);
+        t.setDate(t.getDate() + 1);
+        return t.toLocaleDateString('uk-UA', { weekday: 'long', day: 'numeric', month: 'long' });
+    }
+    const end = new Date(today);
+    end.setDate(end.getDate() + 7);
+    return `${today.toLocaleDateString('uk-UA', {day:'numeric', month:'short'})} — ${end.toLocaleDateString('uk-UA', {day:'numeric', month:'short'})}`;
+}
+
+function getWeekdayName(dateStr) {
+    const d = new Date(dateStr + 'T00:00:00');
+    const today = formatDate(new Date());
+    const tomorrow = formatDate(new Date(Date.now() + 86400000));
+    if (dateStr === today) return 'Сьогодні';
+    if (dateStr === tomorrow) return 'Завтра';
+    return d.toLocaleDateString('uk-UA', { weekday: 'long', day: 'numeric', month: 'long' });
+}
+
+function statusLabel(status) {
+    const map = { pending: 'Очікує', confirmed: 'Підтверджено', completed: 'Завершено', cancelled: 'Скасовано' };
+    return map[status] || status;
+}
+
+// ── Toast notification ──
+let toastTimer = null;
+function showToast(msg, type = '') {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.className = `toast ${type}`;
+    void el.offsetWidth; // reflow
+    el.classList.add('show');
+    if (toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+// ── Tab switch ──
+function switchTab(period) {
+    if (period === currentPeriod || isLoading) return;
+    currentPeriod = period;
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.period === period);
+    });
+    loadBookings();
+}
+
+// ── Load bookings ──
+async function loadBookings() {
+    if (!MASTER_ID) return;
+    isLoading = true;
+    renderLoader();
+
+    try {
+        const res = await fetch(`/api/master/bookings?master_id=${MASTER_ID}&period=${currentPeriod}`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        if (!data.ok) throw new Error(data.detail || 'Помилка сервера');
+        renderBookings(data.bookings || [], currentPeriod);
+    } catch (e) {
+        renderError(e.message);
+    } finally {
+        isLoading = false;
+    }
+}
+
+// ── Render helpers ──
+function renderLoader() {
+    document.getElementById('content').innerHTML = `
+        <div class="loader">
+            <div class="loader-spinner"></div>
+            <div class="loader-text">Завантаження...</div>
+        </div>`;
+}
+
+function renderError(msg) {
+    document.getElementById('content').innerHTML = `
+        <div class="error-state">
+            <div class="error-icon">⚠️</div>
+            <div class="error-title">Помилка завантаження</div>
+            <div class="error-sub">${msg}</div>
+            <button class="retry-btn" onclick="loadBookings()">🔄 Спробувати знову</button>
+        </div>`;
+}
+
+function renderBookings(bookings, period) {
+    const content = document.getElementById('content');
+
+    if (!bookings || bookings.length === 0) {
+        content.innerHTML = `
+            <div class="empty-state">
+                <span class="empty-icon">🎉</span>
+                <div class="empty-title">Записів немає</div>
+                <div class="empty-sub">На цей період у вас немає<br>активних записів.</div>
+            </div>`;
+        return;
+    }
+
+    let html = '';
+
+    if (period === 'week') {
+        // Group by date
+        const groups = {};
+        bookings.forEach(b => {
+            const date = b.time_slot?.split(' ')[0] || 'unknown';
+            if (!groups[date]) groups[date] = [];
+            groups[date].push(b);
+        });
+
+        const sortedDates = Object.keys(groups).sort();
+        sortedDates.forEach(date => {
+            const dayBookings = groups[date];
+            html += `<div class="week-section">`;
+            html += `<div class="week-date-header">
+                        ${getWeekdayName(date)}
+                        <span class="count-badge">${dayBookings.length}</span>
+                     </div>`;
+            dayBookings.forEach(b => { html += buildCard(b); });
+            html += `</div>`;
+        });
+    } else {
+        const label = getDateLabel(period);
+        html += `<div class="date-label">${label}</div>`;
+        bookings.forEach(b => { html += buildCard(b); });
+    }
+
+    content.innerHTML = html;
+}
+
+function buildCard(b) {
+    const timePart = b.time_slot?.split(' ')[1] || b.time_slot || '—';
+    const canAct = b.status === 'pending' || b.status === 'confirmed';
+    const statusClass = b.status || 'pending';
+
+    const completeBtn = canAct
+        ? `<button class="action-btn btn-complete" onclick="confirmAction('complete', ${b.id}, '${timePart}', '${(b.user_name||'').replace(/'/g,"\\'")}')">✅ Завершити</button>`
+        : '';
+    const cancelBtn = canAct
+        ? `<button class="action-btn btn-cancel" onclick="confirmAction('cancel', ${b.id}, '${timePart}', '${(b.user_name||'').replace(/'/g,"\\'")}')">❌ Скасувати</button>`
+        : '';
+
+    const actionsHtml = canAct
+        ? `<div class="booking-actions">${completeBtn}${cancelBtn}</div>`
+        : '';
+
+    const phone = b.phone || '—';
+    const phoneHtml = b.phone
+        ? `<a href="tel:${b.phone}">${b.phone}</a>`
+        : '—';
+
+    return `
+    <div class="booking-card status-${statusClass}" id="card-${b.id}">
+        <div class="booking-header">
+            <div class="booking-time">${timePart}</div>
+            <div class="booking-status ${statusClass}">${statusLabel(b.status)}</div>
+        </div>
+        <div class="booking-body">
+            <div class="booking-row">
+                <span class="booking-row-icon">👤</span>
+                <span class="booking-row-label">Клієнт</span>
+                <span class="booking-row-value">${b.user_name || '—'}</span>
+            </div>
+            <div class="booking-row">
+                <span class="booking-row-icon">✂️</span>
+                <span class="booking-row-label">Послуга</span>
+                <span class="booking-row-value">${b.service || '—'}</span>
+            </div>
+            <div class="booking-row booking-phone">
+                <span class="booking-row-icon">📞</span>
+                <span class="booking-row-label">Телефон</span>
+                <span class="booking-row-value">${phoneHtml}</span>
+            </div>
+        </div>
+        ${actionsHtml}
+    </div>`;
+}
+
+// ── Actions ──
+async function confirmAction(action, bookingId, time, clientName) {
+    const actionLabels = { complete: 'завершити', cancel: 'скасувати' };
+    const msg = `${actionLabels[action] || action} запис ${time} (${clientName || '#' + bookingId})?`;
+
+    // Use Telegram confirm if available, else native
+    let confirmed = false;
+    if (tg && tg.showConfirm) {
+        confirmed = await new Promise(resolve => {
+            tg.showConfirm(msg.charAt(0).toUpperCase() + msg.slice(1), ok => resolve(ok));
+        });
+    } else {
+        confirmed = window.confirm(`Ви впевнені, що хочете ${msg}`);
+    }
+
+    if (!confirmed) return;
+
+    const card = document.getElementById(`card-${bookingId}`);
+    if (card) {
+        const btns = card.querySelectorAll('.action-btn');
+        btns.forEach(b => b.disabled = true);
+    }
+
+    try {
+        const endpoint = action === 'complete' ? '/api/master/complete' : '/api/master/cancel';
+        const res = await fetch(endpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ booking_id: bookingId, master_id: MASTER_ID })
+        });
+
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            throw new Error(err.detail || `HTTP ${res.status}`);
+        }
+
+        const data = await res.json();
+        if (!data.ok) throw new Error(data.detail || 'Помилка');
+
+        const successMsg = action === 'complete' ? '✅ Запис завершено!' : '❌ Запис скасовано.';
+        showToast(successMsg, action === 'complete' ? 'success' : '');
+
+        // Refresh list
+        setTimeout(() => loadBookings(), 800);
+
+    } catch (e) {
+        showToast(`⚠️ ${e.message}`, 'error');
+        if (card) {
+            const btns = card.querySelectorAll('.action-btn');
+            btns.forEach(b => b.disabled = false);
+        }
+    }
+}
+
+// ── Init ──
+async function init() {
+    if (!MASTER_ID) {
+        document.getElementById('app').style.display = 'none';
+        const denied = document.getElementById('access-denied');
+        denied.style.display = 'flex';
+        document.getElementById('denied-reason').textContent = 'Параметр master_id не передано.';
+        return;
+    }
+
+    // Load master name from config
+    try {
+        const cfgRes = await fetch('/api/config');
+        if (cfgRes.ok) {
+            const cfg = await cfgRes.json();
+            const master = (cfg.masters || []).find(m => m.id === MASTER_ID);
+            if (master) {
+                document.getElementById('master-name').textContent = master.name;
+                document.title = `${master.name} • Панель майстра`;
+            }
+        }
+    } catch (e) { /* ignore */ }
+
+    document.getElementById('app').style.display = 'block';
+    loadBookings();
+}
+
+init();
+</script>
+</body>
+</html>
