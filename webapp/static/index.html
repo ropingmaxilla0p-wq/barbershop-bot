@@ -38,7 +38,7 @@
             min-height: 100vh;
             background-size: cover;
             background-position: center;
-            background-attachment: fixed;
+            background-attachment: scroll;
             overflow-x: hidden;
             transition: background-image 0.6s ease-in-out;
         }
@@ -571,6 +571,7 @@
     <script>
         const tg = window.Telegram.WebApp;
         tg.expand();
+        tg.ready(); // Signal Telegram that the app is ready (required to remove loading overlay and enable touch events)
 
         // iOS keyboard detection — move button above keyboard
         const initialHeight = window.innerHeight;
@@ -668,7 +669,7 @@
         /* ── Data ── */
         async function loadConfig() {
             try {
-                const res = await fetch('/api/config', {headers: {'User-Agent': 'TelegramBot'}});
+                const res = await fetch('/api/config', {headers: {'ngrok-skip-browser-warning': 'true', 'User-Agent': 'TelegramBot'}});
                 state.config = await res.json();
                 updateUI();
             } catch (e) {
@@ -723,7 +724,7 @@
             // Load booked dates for this master to disable them in calendar
             let disabledDates = [];
             try {
-                const res = await fetch(`/api/booked-dates?master_id=${state.booking.master.id}`, {headers: {'User-Agent': 'TelegramBot'}});
+                const res = await fetch(`/api/booked-dates?master_id=${state.booking.master.id}`, {headers: {'ngrok-skip-browser-warning': 'true', 'User-Agent': 'TelegramBot'}});
                 const data = await res.json();
                 disabledDates = data.fully_booked_dates || [];
             } catch(e) {}
@@ -748,7 +749,7 @@
             
             try {
                 const duration = state.booking.service?.duration_minutes || 30;
-                const res = await fetch(`/api/available-slots?master_id=${state.booking.master.id}&date=${date}&duration=${duration}`, {headers: {'User-Agent': 'TelegramBot'}});
+                const res = await fetch(`/api/available-slots?master_id=${state.booking.master.id}&date=${date}&duration=${duration}`, {headers: {'ngrok-skip-browser-warning': 'true', 'User-Agent': 'TelegramBot'}});
                 const data = await res.json();
                 grid.innerHTML = '';
                 const hint = document.getElementById('time-hint');
@@ -934,7 +935,7 @@
 
             try {
                 const res = await fetch(`/api/bookings/${userId}`, {
-                    headers: {'User-Agent': 'TelegramBot'}
+                    headers: {'ngrok-skip-browser-warning': 'true', 'User-Agent': 'TelegramBot'}
                 });
                 const data = await res.json();
 
@@ -1027,7 +1028,7 @@
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        ,
+                        'ngrok-skip-browser-warning': 'true',
                         'User-Agent': 'TelegramBot'
                     },
                     body: JSON.stringify({ user_id: String(userId) })
@@ -1109,7 +1110,7 @@
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        ,
+                        'ngrok-skip-browser-warning': 'true',
                         'User-Agent': 'TelegramBot'
                     },
                     body: JSON.stringify(payload)
@@ -1119,7 +1120,7 @@
                     btn.textContent = 'Час зайнятий - оберіть інший';
                     btn.disabled = false;
                     _submitting = false;
-                    setTimeout(() => { state.step = 3; renderStep(); }, 2000);
+                    setTimeout(() => goTo(3), 2000);
                     return;
                 }
 
